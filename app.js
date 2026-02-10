@@ -1,5 +1,5 @@
 const START_SCORE = 7;
-const LONG_PRESS_MS = 600;
+const LONG_PRESS_MS = 450;
 
 const state = {
   playerCount: 4,
@@ -13,6 +13,10 @@ const newRoundBtn = document.getElementById("newRoundBtn");
 const undoBtn = document.getElementById("undoBtn");
 const fullscreenBtn = document.getElementById("fullscreenBtn");
 const cardTemplate = document.getElementById("playerCardTemplate");
+
+window.addEventListener("contextmenu", (event) => {
+  event.preventDefault();
+});
 
 function createPlayer(index, previous = null) {
   return {
