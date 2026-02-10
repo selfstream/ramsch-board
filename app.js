@@ -194,6 +194,7 @@ function bindScoreInteractions(svg, playerId) {
   let longPressTimer = null;
   let longPressTriggered = false;
   let activePointerId = null;
+  let touchFallbackActive = false;
 
   function handleLongPress() {
     const player = state.players.find((entry) => entry.id === playerId);
@@ -214,6 +215,22 @@ function bindScoreInteractions(svg, playerId) {
     }
   }
 
+  function startPress() {
+    longPressTriggered = false;
+    clearLongPressTimer();
+    longPressTimer = window.setTimeout(() => {
+      longPressTriggered = true;
+      handleLongPress();
+    }, LONG_PRESS_MS);
+  }
+
+  function endPress() {
+    clearLongPressTimer();
+    if (!longPressTriggered) {
+      changeScore(playerId, -1);
+    }
+  }
+
   function isPrimaryPointer(event) {
     if (event.pointerType === "mouse") {
       return event.button === 0;
@@ -230,12 +247,7 @@ function bindScoreInteractions(svg, playerId) {
     activePointerId = event.pointerId;
     svg.setPointerCapture(event.pointerId);
 
-    longPressTriggered = false;
-    clearLongPressTimer();
-    longPressTimer = window.setTimeout(() => {
-      longPressTriggered = true;
-      handleLongPress();
-    }, LONG_PRESS_MS);
+    startPress();
   });
 
   svg.addEventListener("pointerup", (event) => {
@@ -246,10 +258,7 @@ function bindScoreInteractions(svg, playerId) {
       svg.releasePointerCapture(event.pointerId);
     }
 
-    clearLongPressTimer();
-    if (!longPressTriggered) {
-      changeScore(playerId, -1);
-    }
+    endPress();
   });
 
   svg.addEventListener("pointercancel", (event) => {
@@ -267,6 +276,32 @@ function bindScoreInteractions(svg, playerId) {
   });
 
   svg.addEventListener("contextmenu", (event) => event.preventDefault());
+
+  // Fallback für Browser ohne Pointer Events (ältere iOS/Safari Versionen).
+  if (!window.PointerEvent) {
+    svg.addEventListener(
+      "touchstart",
+      (event) => {
+        if (event.touches.length !== 1) return;
+        touchFallbackActive = true;
+        event.preventDefault();
+        startPress();
+      },
+      { passive: false }
+    );
+
+    const finishTouchFallback = () => {
+      if (!touchFallbackActive) return;
+      touchFallbackActive = false;
+      endPress();
+    };
+
+    svg.addEventListener("touchend", finishTouchFallback);
+    svg.addEventListener("touchcancel", () => {
+      touchFallbackActive = false;
+      clearLongPressTimer();
+    });
+  }
 }
 
 function renderCard(player) {
