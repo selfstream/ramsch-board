@@ -1,5 +1,5 @@
 const START_SCORE = 7;
-const LONG_PRESS_MS = 450;
+const LONG_PRESS_MS = 900;
 
 const state = {
   playerCount: 4,
@@ -194,6 +194,18 @@ function bindScoreInteractions(svg, playerId) {
   let longPressTimer = null;
   let longPressTriggered = false;
 
+  function handleLongPress() {
+    const player = state.players.find((entry) => entry.id === playerId);
+    if (!player) return;
+
+    if (player.score === 0) {
+      changeScore(playerId, +7);
+      return;
+    }
+
+    changeScore(playerId, +2);
+  }
+
   function clearLongPressTimer() {
     if (longPressTimer !== null) {
       window.clearTimeout(longPressTimer);
@@ -204,11 +216,12 @@ function bindScoreInteractions(svg, playerId) {
   svg.addEventListener("pointerdown", (event) => {
     if (event.button !== 0) return;
 
+
     longPressTriggered = false;
     clearLongPressTimer();
     longPressTimer = window.setTimeout(() => {
       longPressTriggered = true;
-      changeScore(playerId, +2);
+      handleLongPress();
     }, LONG_PRESS_MS);
   });
 
@@ -223,6 +236,7 @@ function bindScoreInteractions(svg, playerId) {
 
   svg.addEventListener("pointerleave", clearLongPressTimer);
   svg.addEventListener("pointercancel", clearLongPressTimer);
+  svg.addEventListener("contextmenu", (event) => event.preventDefault());
 }
 
 function renderCard(player) {
