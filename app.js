@@ -93,25 +93,20 @@ function renderTally(svg, score) {
   for (let g = 0; g < groups; g += 1) {
     const groupStartX = baseX + g * groupSpace;
 
-    for (let i = 0; i < 4; i += 1) {
-      const jitterX = (Math.random() - 0.5) * 2.4;
-      const jitterTop = (Math.random() - 0.5) * 4;
-      const jitterBottom = (Math.random() - 0.5) * 4;
-      chalkLine(
-        svg,
-        groupStartX + i * 9 + jitterX,
-        baseY + jitterTop,
-        groupStartX + i * 9 + jitterX,
-        baseY + barHeight + jitterBottom
-      );
-    }
+    chalkLine(
+      svg,
+      groupStartX + (Math.random() - 0.5) * 3,
+      baseY + 6 + (Math.random() - 0.5) * 3,
+      groupStartX + 30 + (Math.random() - 0.5) * 3,
+      baseY + barHeight - 6 + (Math.random() - 0.5) * 3
+    );
 
     chalkLine(
       svg,
-      groupStartX - 5 + (Math.random() - 0.5) * 3,
-      baseY + barHeight - 8 + (Math.random() - 0.5) * 3,
-      groupStartX + 31 + (Math.random() - 0.5) * 3,
-      baseY + 8 + (Math.random() - 0.5) * 3
+      groupStartX + 30 + (Math.random() - 0.5) * 3,
+      baseY + 6 + (Math.random() - 0.5) * 3,
+      groupStartX + (Math.random() - 0.5) * 3,
+      baseY + barHeight - 6 + (Math.random() - 0.5) * 3
     );
   }
 
@@ -142,8 +137,13 @@ function changeScore(playerId, delta) {
 
   player.score = Math.max(0, player.score + delta);
 
-  if (player.score === 0) {
-    player.bolla += 1;
+  const playersStillInRound = state.players.filter((entry) => entry.score > 0);
+  if (playersStillInRound.length <= 1) {
+    const winner = playersStillInRound[0];
+    if (winner) {
+      winner.bolla += 1;
+    }
+
     for (const p of state.players) {
       p.score = START_SCORE;
     }
