@@ -193,6 +193,7 @@ function resetRound() {
 function bindScoreInteractions(svg, playerId) {
   let longPressTimer = null;
   let longPressTriggered = false;
+  let activePointerId = null;
 
   function handleLongPress() {
     const player = state.players.find((entry) => entry.id === playerId);
@@ -213,10 +214,21 @@ function bindScoreInteractions(svg, playerId) {
     }
   }
 
+  function isPrimaryPointer(event) {
+    if (event.pointerType === "mouse") {
+      return event.button === 0;
+    }
+
+    return event.isPrimary;
+  }
+
   svg.addEventListener("pointerdown", (event) => {
-    if (event.button !== 0) return;
+    if (!isPrimaryPointer(event)) return;
 
     event.preventDefault();
+
+    activePointerId = event.pointerId;
+    svg.setPointerCapture(event.pointerId);
 
     longPressTriggered = false;
     clearLongPressTimer();
@@ -227,7 +239,12 @@ function bindScoreInteractions(svg, playerId) {
   });
 
   svg.addEventListener("pointerup", (event) => {
-    if (event.button !== 0) return;
+    if (event.pointerId !== activePointerId) return;
+
+    activePointerId = null;
+    if (svg.hasPointerCapture(event.pointerId)) {
+      svg.releasePointerCapture(event.pointerId);
+    }
 
     clearLongPressTimer();
     if (!longPressTriggered) {
@@ -235,8 +252,20 @@ function bindScoreInteractions(svg, playerId) {
     }
   });
 
-  svg.addEventListener("pointerleave", clearLongPressTimer);
-  svg.addEventListener("pointercancel", clearLongPressTimer);
+  svg.addEventListener("pointercancel", (event) => {
+    if (event.pointerId !== activePointerId) return;
+
+    activePointerId = null;
+    clearLongPressTimer();
+  });
+
+  svg.addEventListener("lostpointercapture", (event) => {
+    if (event.pointerId !== activePointerId) return;
+
+    activePointerId = null;
+    clearLongPressTimer();
+  });
+
   svg.addEventListener("contextmenu", (event) => event.preventDefault());
 }
 
