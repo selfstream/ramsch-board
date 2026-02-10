@@ -10,6 +10,7 @@ const board = document.getElementById("board");
 const playerCountSelect = document.getElementById("playerCount");
 const newRoundBtn = document.getElementById("newRoundBtn");
 const undoBtn = document.getElementById("undoBtn");
+const fullscreenBtn = document.getElementById("fullscreenBtn");
 const cardTemplate = document.getElementById("playerCardTemplate");
 
 function createPlayer(index, previous = null) {
@@ -213,13 +214,51 @@ function setPlayerCount(count) {
   render();
 }
 
+function canUseFullscreen() {
+  return Boolean(document.documentElement.requestFullscreen);
+}
+
+function isFullscreenActive() {
+  return Boolean(document.fullscreenElement);
+}
+
+function updateFullscreenButton() {
+  if (!fullscreenBtn) return;
+
+  const supported = canUseFullscreen();
+  fullscreenBtn.disabled = !supported;
+  if (!supported) {
+    fullscreenBtn.textContent = "Vollbild nicht verfügbar";
+    return;
+  }
+
+  fullscreenBtn.textContent = isFullscreenActive() ? "Vollbild beenden" : "Vollbild";
+}
+
+async function toggleFullscreen() {
+  if (!canUseFullscreen()) return;
+
+  try {
+    if (isFullscreenActive()) {
+      await document.exitFullscreen();
+    } else {
+      await document.documentElement.requestFullscreen();
+    }
+  } catch (error) {
+    console.error("Vollbild konnte nicht umgeschaltet werden", error);
+  }
+}
+
 playerCountSelect.addEventListener("change", (event) => {
   setPlayerCount(Number(event.target.value));
 });
 
 newRoundBtn.addEventListener("click", resetRound);
 undoBtn.addEventListener("click", undo);
+fullscreenBtn?.addEventListener("click", toggleFullscreen);
+document.addEventListener("fullscreenchange", updateFullscreenButton);
 
 initPlayers(state.playerCount, false);
 render();
 updateUndoState();
+updateFullscreenButton();
