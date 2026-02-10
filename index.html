@@ -33,24 +33,21 @@
 
     <template id="playerCardTemplate">
       <article class="player-card">
-        <header>
-          <h2 class="player-name"></h2>
+        <header class="player-header">
+          <button class="player-name" type="button"></button>
+          <div class="bolla-wrap">
+            <span class="bolla-label">Bolla</span>
+            <span class="bolla-dots" aria-live="polite"></span>
+            <span class="bolla-count"></span>
+          </div>
         </header>
 
         <div class="chalk-score-wrap">
           <svg class="chalk-score" viewBox="0 0 240 120" role="img" aria-label="Punkte als Kreidestriche"></svg>
-          <p class="numeric-score" aria-live="polite"></p>
-        </div>
-
-        <div class="bolla-wrap">
-          <span class="bolla-label">Bolla:</span>
-          <span class="bolla-dots" aria-live="polite"></span>
-          <span class="bolla-count"></span>
         </div>
 
         <div class="player-actions">
-          <button class="minus-btn" type="button">-1</button>
-          <button class="plus-btn" type="button">+1</button>
+          <button class="plus-btn" type="button">+2</button>
         </div>
       </article>
     </template>
