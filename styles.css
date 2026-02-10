@@ -222,16 +222,6 @@ button:disabled {
   box-shadow: 0 0 4px rgba(255, 255, 255, 0.4);
 }
 
-.player-actions {
-  display: flex;
-}
-
-.plus-btn {
-  width: 100%;
-  font-weight: 700;
-  font-size: 0.94rem;
-  min-height: 1.95rem;
-}
 
 @media (orientation: portrait) {
   .layout-4,
@@ -303,9 +293,6 @@ button:disabled {
     min-height: 86px;
   }
 
-  .plus-btn {
-    min-height: 1.65rem;
-  }
 }
 
 @media (orientation: portrait) and (max-width: 1024px) {
