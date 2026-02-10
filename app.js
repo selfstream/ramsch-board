@@ -216,6 +216,7 @@ function bindScoreInteractions(svg, playerId) {
   svg.addEventListener("pointerdown", (event) => {
     if (event.button !== 0) return;
 
+    event.preventDefault();
 
     longPressTriggered = false;
     clearLongPressTimer();
