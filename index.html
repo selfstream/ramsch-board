@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ramsch Tafel</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="toolbar">
+        <div class="toolbar__left">
+          <h1>Ramsch Tafel</h1>
+          <p class="subtitle">Kreidetafel für 2–4 Spieler</p>
+        </div>
+
+        <div class="toolbar__controls">
+          <label for="playerCount">Spieler</label>
+          <select id="playerCount" aria-label="Anzahl Spieler">
+            <option value="4">4</option>
+            <option value="3">3</option>
+            <option value="2">2</option>
+          </select>
+          <button id="newRoundBtn" type="button">Neue Runde (alle auf 7)</button>
+          <button id="undoBtn" type="button">Undo</button>
+        </div>
+      </header>
+
+      <section class="wood-frame" aria-label="Ramsch Spieltafel">
+        <div class="chalkboard" id="board"></div>
+      </section>
+    </main>
+
+    <template id="playerCardTemplate">
+      <article class="player-card">
+        <header>
+          <h2 class="player-name"></h2>
+        </header>
+
+        <div class="chalk-score-wrap">
+          <svg class="chalk-score" viewBox="0 0 240 120" role="img" aria-label="Punkte als Kreidestriche"></svg>
+          <p class="numeric-score" aria-live="polite"></p>
+        </div>
+
+        <div class="bolla-wrap">
+          <span class="bolla-label">Bolla:</span>
+          <span class="bolla-dots" aria-live="polite"></span>
+          <span class="bolla-count"></span>
+        </div>
+
+        <div class="player-actions">
+          <button class="minus-btn" type="button">-1</button>
+          <button class="plus-btn" type="button">+1</button>
+        </div>
+      </article>
+    </template>
+
+    <script src="app.js"></script>
+  </body>
+</html>
