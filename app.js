@@ -1,4 +1,5 @@
 const START_SCORE = 7;
+const LONG_PRESS_MS = 450;
 
 const state = {
   playerCount: 4,
@@ -63,7 +64,17 @@ function updateUndoState() {
   undoBtn.disabled = state.history.length === 0;
 }
 
-function chalkLine(svg, x1, y1, x2, y2) {
+function seededRandom(seed) {
+  let value = seed | 0;
+  return () => {
+    value += 0x6d2b79f5;
+    let t = Math.imul(value ^ (value >>> 15), value | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function chalkLine(svg, x1, y1, x2, y2, random) {
   const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
   line.setAttribute("x1", x1);
   line.setAttribute("y1", y1);
@@ -72,15 +83,16 @@ function chalkLine(svg, x1, y1, x2, y2) {
   line.setAttribute("stroke", "#f5f5f5");
   line.setAttribute("stroke-linecap", "round");
 
-  const strokeWidth = 7.2 + Math.random() * 2.4;
+  const strokeWidth = 7.2 + random() * 2.4;
   line.setAttribute("stroke-width", strokeWidth.toFixed(2));
-  line.setAttribute("opacity", (0.86 + Math.random() * 0.14).toFixed(2));
+  line.setAttribute("opacity", (0.86 + random() * 0.14).toFixed(2));
 
   svg.append(line);
 }
 
-function renderTally(svg, score) {
+function renderTally(svg, score, seedBase) {
   svg.innerHTML = "";
+  const random = seededRandom(seedBase);
 
   const groups = Math.floor(score / 5);
   const remainder = score % 5;
@@ -95,32 +107,35 @@ function renderTally(svg, score) {
 
     chalkLine(
       svg,
-      groupStartX + (Math.random() - 0.5) * 3,
-      baseY + 6 + (Math.random() - 0.5) * 3,
-      groupStartX + 38 + (Math.random() - 0.5) * 3,
-      baseY + barHeight - 6 + (Math.random() - 0.5) * 3
+      groupStartX + (random() - 0.5) * 3,
+      baseY + 6 + (random() - 0.5) * 3,
+      groupStartX + 38 + (random() - 0.5) * 3,
+      baseY + barHeight - 6 + (random() - 0.5) * 3,
+      random
     );
 
     chalkLine(
       svg,
-      groupStartX + 38 + (Math.random() - 0.5) * 3,
-      baseY + 6 + (Math.random() - 0.5) * 3,
-      groupStartX + (Math.random() - 0.5) * 3,
-      baseY + barHeight - 6 + (Math.random() - 0.5) * 3
+      groupStartX + 38 + (random() - 0.5) * 3,
+      baseY + 6 + (random() - 0.5) * 3,
+      groupStartX + (random() - 0.5) * 3,
+      baseY + barHeight - 6 + (random() - 0.5) * 3,
+      random
     );
   }
 
   const remStartX = baseX + groups * groupSpace;
   for (let i = 0; i < remainder; i += 1) {
-    const jitterX = (Math.random() - 0.5) * 2.4;
-    const jitterTop = (Math.random() - 0.5) * 4;
-    const jitterBottom = (Math.random() - 0.5) * 4;
+    const jitterX = (random() - 0.5) * 2.4;
+    const jitterTop = (random() - 0.5) * 4;
+    const jitterBottom = (random() - 0.5) * 4;
     chalkLine(
       svg,
       remStartX + i * 14 + jitterX,
       baseY + jitterTop,
       remStartX + i * 14 + jitterX,
-      baseY + barHeight + jitterBottom
+      baseY + barHeight + jitterBottom,
+      random
     );
   }
 }
@@ -175,6 +190,41 @@ function resetRound() {
   render();
 }
 
+function bindScoreInteractions(svg, playerId) {
+  let longPressTimer = null;
+  let longPressTriggered = false;
+
+  function clearLongPressTimer() {
+    if (longPressTimer !== null) {
+      window.clearTimeout(longPressTimer);
+      longPressTimer = null;
+    }
+  }
+
+  svg.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0) return;
+
+    longPressTriggered = false;
+    clearLongPressTimer();
+    longPressTimer = window.setTimeout(() => {
+      longPressTriggered = true;
+      changeScore(playerId, +2);
+    }, LONG_PRESS_MS);
+  });
+
+  svg.addEventListener("pointerup", (event) => {
+    if (event.button !== 0) return;
+
+    clearLongPressTimer();
+    if (!longPressTriggered) {
+      changeScore(playerId, -1);
+    }
+  });
+
+  svg.addEventListener("pointerleave", clearLongPressTimer);
+  svg.addEventListener("pointercancel", clearLongPressTimer);
+}
+
 function renderCard(player) {
   const cardFragment = cardTemplate.content.cloneNode(true);
   const card = cardFragment.querySelector(".player-card");
@@ -187,11 +237,10 @@ function renderCard(player) {
   card.querySelector(".bolla-count").textContent = `(${player.bolla})`;
 
   const svg = card.querySelector(".chalk-score");
-  renderTally(svg, player.score);
+  renderTally(svg, player.score, player.id * 1000 + player.score);
 
-  svg.addEventListener("click", () => changeScore(player.id, -1));
+  bindScoreInteractions(svg, player.id);
   playerNameBtn.addEventListener("click", () => renamePlayer(player.id));
-  card.querySelector(".plus-btn").addEventListener("click", () => changeScore(player.id, +2));
 
   return cardFragment;
 }
