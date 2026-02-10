@@ -275,7 +275,6 @@ function bindScoreInteractions(svg, playerId) {
     clearLongPressTimer();
   });
 
-  svg.addEventListener("contextmenu", (event) => event.preventDefault());
 
   // Fallback für Browser ohne Pointer Events (ältere iOS/Safari Versionen).
   if (!window.PointerEvent) {
