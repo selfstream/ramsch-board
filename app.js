@@ -1,5 +1,4 @@
 const START_SCORE = 7;
-const MAX_HINT = 20;
 
 const state = {
   playerCount: 4,
@@ -16,7 +15,7 @@ const cardTemplate = document.getElementById("playerCardTemplate");
 function createPlayer(index, previous = null) {
   return {
     id: index + 1,
-    name: `Spieler ${index + 1}`,
+    name: previous?.name ?? `Spieler ${index + 1}`,
     score: previous?.score ?? START_SCORE,
     bolla: previous?.bolla ?? 0
   };
@@ -72,7 +71,7 @@ function chalkLine(svg, x1, y1, x2, y2) {
   line.setAttribute("stroke", "#f5f5f5");
   line.setAttribute("stroke-linecap", "round");
 
-  const strokeWidth = 4.2 + Math.random() * 1.7;
+  const strokeWidth = 7.2 + Math.random() * 2.4;
   line.setAttribute("stroke-width", strokeWidth.toFixed(2));
   line.setAttribute("opacity", (0.86 + Math.random() * 0.14).toFixed(2));
 
@@ -85,10 +84,10 @@ function renderTally(svg, score) {
   const groups = Math.floor(score / 5);
   const remainder = score % 5;
 
-  const groupSpace = 48;
-  let baseX = 18;
-  const baseY = 22;
-  const barHeight = 82;
+  const groupSpace = 64;
+  const baseX = 20;
+  const baseY = 12;
+  const barHeight = 100;
 
   for (let g = 0; g < groups; g += 1) {
     const groupStartX = baseX + g * groupSpace;
@@ -97,13 +96,13 @@ function renderTally(svg, score) {
       svg,
       groupStartX + (Math.random() - 0.5) * 3,
       baseY + 6 + (Math.random() - 0.5) * 3,
-      groupStartX + 30 + (Math.random() - 0.5) * 3,
+      groupStartX + 38 + (Math.random() - 0.5) * 3,
       baseY + barHeight - 6 + (Math.random() - 0.5) * 3
     );
 
     chalkLine(
       svg,
-      groupStartX + 30 + (Math.random() - 0.5) * 3,
+      groupStartX + 38 + (Math.random() - 0.5) * 3,
       baseY + 6 + (Math.random() - 0.5) * 3,
       groupStartX + (Math.random() - 0.5) * 3,
       baseY + barHeight - 6 + (Math.random() - 0.5) * 3
@@ -117,9 +116,9 @@ function renderTally(svg, score) {
     const jitterBottom = (Math.random() - 0.5) * 4;
     chalkLine(
       svg,
-      remStartX + i * 10 + jitterX,
+      remStartX + i * 14 + jitterX,
       baseY + jitterTop,
-      remStartX + i * 10 + jitterX,
+      remStartX + i * 14 + jitterX,
       baseY + barHeight + jitterBottom
     );
   }
@@ -152,6 +151,21 @@ function changeScore(playerId, delta) {
   render();
 }
 
+function renamePlayer(playerId) {
+  const player = state.players.find((entry) => entry.id === playerId);
+  if (!player) return;
+
+  const nextName = window.prompt("Spielernamen eingeben:", player.name);
+  if (nextName === null) return;
+
+  const trimmedName = nextName.trim();
+  if (!trimmedName) return;
+
+  recordHistory();
+  player.name = trimmedName;
+  render();
+}
+
 function resetRound() {
   recordHistory();
   for (const player of state.players) {
@@ -164,10 +178,8 @@ function renderCard(player) {
   const cardFragment = cardTemplate.content.cloneNode(true);
   const card = cardFragment.querySelector(".player-card");
 
-  card.querySelector(".player-name").textContent = player.name;
-
-  const scoreLabel = card.querySelector(".numeric-score");
-  scoreLabel.textContent = `${player.score} Punkte${player.score > MAX_HINT ? " (hoch)" : ""}`;
+  const playerNameBtn = card.querySelector(".player-name");
+  playerNameBtn.textContent = player.name;
 
   const bollaDotsEl = card.querySelector(".bolla-dots");
   bollaDotsEl.innerHTML = bollaDots(player.bolla);
@@ -176,8 +188,9 @@ function renderCard(player) {
   const svg = card.querySelector(".chalk-score");
   renderTally(svg, player.score);
 
-  card.querySelector(".minus-btn").addEventListener("click", () => changeScore(player.id, -1));
-  card.querySelector(".plus-btn").addEventListener("click", () => changeScore(player.id, +1));
+  svg.addEventListener("click", () => changeScore(player.id, -1));
+  playerNameBtn.addEventListener("click", () => renamePlayer(player.id));
+  card.querySelector(".plus-btn").addEventListener("click", () => changeScore(player.id, +2));
 
   return cardFragment;
 }
