@@ -1,5 +1,5 @@
 const START_SCORE = 7;
-const LONG_PRESS_MS = 900;
+const LONG_PRESS_MS = 600;
 
 const state = {
   playerCount: 4,
@@ -248,6 +248,14 @@ function bindScoreInteractions(svg, playerId) {
     svg.setPointerCapture(event.pointerId);
 
     startPress();
+  });
+
+  svg.addEventListener("contextmenu", (event) => {
+    event.preventDefault();
+  });
+
+  svg.addEventListener("selectstart", (event) => {
+    event.preventDefault();
   });
 
   svg.addEventListener("pointerup", (event) => {
