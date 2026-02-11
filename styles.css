@@ -51,12 +51,6 @@ h1 {
   font-size: clamp(1rem, 1.4vw, 1.35rem);
 }
 
-.subtitle {
-  margin: 0.1rem 0 0;
-  opacity: 0.8;
-  font-size: 0.82rem;
-}
-
 .toolbar__controls {
   display: flex;
   align-items: center;
@@ -192,13 +186,17 @@ button:disabled {
 .chalk-score {
   width: min(100%, 440px);
   height: 100%;
-  min-height: 120px;
+  min-height: 142px;
   cursor: pointer;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .bolla-wrap {
   display: flex;
-  gap: 0.2rem;
+  gap: 0.35rem;
   align-items: center;
   flex-wrap: wrap;
   font-size: 0.78rem;
@@ -209,17 +207,17 @@ button:disabled {
 }
 
 .bolla-dots {
-  min-height: 0.8rem;
+  min-height: 1.15rem;
 }
 
 .bolla-dot {
   display: inline-block;
-  width: 0.45rem;
+  width: 0.7rem;
   aspect-ratio: 1;
   border-radius: 50%;
-  margin-right: 0.15rem;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 0 4px rgba(255, 255, 255, 0.4);
+  margin-right: 0.22rem;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.45);
 }
 
 
@@ -290,7 +288,7 @@ button:disabled {
   }
 
   .chalk-score {
-    min-height: 86px;
+    min-height: 120px;
   }
 
 }
@@ -298,10 +296,6 @@ button:disabled {
 @media (orientation: portrait) and (max-width: 1024px) {
   h1 {
     font-size: 0.96rem;
-  }
-
-  .subtitle {
-    font-size: 0.74rem;
   }
 
   .player-name {
@@ -313,6 +307,17 @@ button:disabled {
   }
 
   .chalk-score {
-    min-height: 74px;
+    min-height: 92px;
+  }
+}
+
+@media (max-width: 640px) {
+  .chalk-score {
+    min-height: 82px;
+  }
+
+  .bolla-dot {
+    width: 0.58rem;
+    margin-right: 0.16rem;
   }
 }
