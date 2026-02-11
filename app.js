@@ -1,5 +1,6 @@
 const START_SCORE = 7;
 const LONG_PRESS_MS = 450;
+const LONG_PRESS_CANCEL_THRESHOLD_PX = 14;
 
 const state = {
   playerCount: 4,
@@ -78,7 +79,7 @@ function seededRandom(seed) {
   };
 }
 
-function chalkLine(svg, x1, y1, x2, y2, random) {
+function chalkLine(svg, x1, y1, x2, y2, random, strokeBase) {
   const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
   line.setAttribute("x1", x1);
   line.setAttribute("y1", y1);
@@ -87,7 +88,7 @@ function chalkLine(svg, x1, y1, x2, y2, random) {
   line.setAttribute("stroke", "#f5f5f5");
   line.setAttribute("stroke-linecap", "round");
 
-  const strokeWidth = 7.2 + random() * 2.4;
+  const strokeWidth = strokeBase + random() * 1.8;
   line.setAttribute("stroke-width", strokeWidth.toFixed(2));
   line.setAttribute("opacity", (0.86 + random() * 0.14).toFixed(2));
 
@@ -101,10 +102,14 @@ function renderTally(svg, score, seedBase) {
   const groups = Math.floor(score / 5);
   const remainder = score % 5;
 
-  const groupSpace = 64;
-  const baseX = 20;
-  const baseY = 12;
-  const barHeight = 100;
+  const isSmallPhone = window.matchMedia("(max-width: 520px)").matches;
+  const strokeBase = isSmallPhone ? 4.7 : 6.9;
+  const groupSpace = isSmallPhone ? 54 : 70;
+  const remainderSpacing = isSmallPhone ? 12 : 15;
+  const crossWidth = isSmallPhone ? 32 : 42;
+  const baseX = 18;
+  const baseY = 9;
+  const barHeight = 122;
 
   for (let g = 0; g < groups; g += 1) {
     const groupStartX = baseX + g * groupSpace;
@@ -113,18 +118,20 @@ function renderTally(svg, score, seedBase) {
       svg,
       groupStartX + (random() - 0.5) * 3,
       baseY + 6 + (random() - 0.5) * 3,
-      groupStartX + 38 + (random() - 0.5) * 3,
+      groupStartX + crossWidth + (random() - 0.5) * 3,
       baseY + barHeight - 6 + (random() - 0.5) * 3,
-      random
+      random,
+      strokeBase
     );
 
     chalkLine(
       svg,
-      groupStartX + 38 + (random() - 0.5) * 3,
+      groupStartX + crossWidth + (random() - 0.5) * 3,
       baseY + 6 + (random() - 0.5) * 3,
       groupStartX + (random() - 0.5) * 3,
       baseY + barHeight - 6 + (random() - 0.5) * 3,
-      random
+      random,
+      strokeBase
     );
   }
 
@@ -135,11 +142,12 @@ function renderTally(svg, score, seedBase) {
     const jitterBottom = (random() - 0.5) * 4;
     chalkLine(
       svg,
-      remStartX + i * 14 + jitterX,
+      remStartX + i * remainderSpacing + jitterX,
       baseY + jitterTop,
-      remStartX + i * 14 + jitterX,
+      remStartX + i * remainderSpacing + jitterX,
       baseY + barHeight + jitterBottom,
-      random
+      random,
+      strokeBase
     );
   }
 }
@@ -186,10 +194,14 @@ function renamePlayer(playerId) {
   render();
 }
 
-function resetRound() {
+function startNewGame() {
+  const confirmed = window.confirm("Neues Spiel starten? Alle Bolla werden gelöscht und alle Spieler auf 7 Striche gesetzt.");
+  if (!confirmed) return;
+
   recordHistory();
   for (const player of state.players) {
     player.score = START_SCORE;
+    player.bolla = 0;
   }
   render();
 }
@@ -199,6 +211,8 @@ function bindScoreInteractions(svg, playerId) {
   let longPressTriggered = false;
   let activePointerId = null;
   let touchFallbackActive = false;
+  let pointerStartX = null;
+  let pointerStartY = null;
 
   function handleLongPress() {
     const player = state.players.find((entry) => entry.id === playerId);
@@ -228,6 +242,14 @@ function bindScoreInteractions(svg, playerId) {
     }, LONG_PRESS_MS);
   }
 
+  function pointerMovedTooFar(event) {
+    if (pointerStartX === null || pointerStartY === null) return false;
+    const deltaX = event.clientX - pointerStartX;
+    const deltaY = event.clientY - pointerStartY;
+    const distance = Math.hypot(deltaX, deltaY);
+    return distance > LONG_PRESS_CANCEL_THRESHOLD_PX;
+  }
+
   function endPress() {
     clearLongPressTimer();
     if (!longPressTriggered) {
@@ -249,6 +271,8 @@ function bindScoreInteractions(svg, playerId) {
     event.preventDefault();
 
     activePointerId = event.pointerId;
+    pointerStartX = event.clientX;
+    pointerStartY = event.clientY;
     svg.setPointerCapture(event.pointerId);
 
     startPress();
@@ -262,10 +286,21 @@ function bindScoreInteractions(svg, playerId) {
     event.preventDefault();
   });
 
+  svg.addEventListener("pointermove", (event) => {
+    if (event.pointerId !== activePointerId) return;
+    if (longPressTriggered) return;
+
+    if (pointerMovedTooFar(event)) {
+      clearLongPressTimer();
+    }
+  });
+
   svg.addEventListener("pointerup", (event) => {
     if (event.pointerId !== activePointerId) return;
 
     activePointerId = null;
+    pointerStartX = null;
+    pointerStartY = null;
     if (svg.hasPointerCapture(event.pointerId)) {
       svg.releasePointerCapture(event.pointerId);
     }
@@ -277,6 +312,8 @@ function bindScoreInteractions(svg, playerId) {
     if (event.pointerId !== activePointerId) return;
 
     activePointerId = null;
+    pointerStartX = null;
+    pointerStartY = null;
     clearLongPressTimer();
   });
 
@@ -284,6 +321,8 @@ function bindScoreInteractions(svg, playerId) {
     if (event.pointerId !== activePointerId) return;
 
     activePointerId = null;
+    pointerStartX = null;
+    pointerStartY = null;
     clearLongPressTimer();
   });
 
@@ -324,7 +363,6 @@ function renderCard(player) {
 
   const bollaDotsEl = card.querySelector(".bolla-dots");
   bollaDotsEl.innerHTML = bollaDots(player.bolla);
-  card.querySelector(".bolla-count").textContent = `(${player.bolla})`;
 
   const svg = card.querySelector(".chalk-score");
   renderTally(svg, player.score, player.id * 1000 + player.score);
@@ -392,7 +430,7 @@ playerCountSelect.addEventListener("change", (event) => {
   setPlayerCount(Number(event.target.value));
 });
 
-newRoundBtn.addEventListener("click", resetRound);
+newRoundBtn.addEventListener("click", startNewGame);
 undoBtn.addEventListener("click", undo);
 fullscreenBtn?.addEventListener("click", toggleFullscreen);
 document.addEventListener("fullscreenchange", updateFullscreenButton);
