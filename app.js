@@ -19,6 +19,19 @@ window.addEventListener("contextmenu", (event) => {
   event.preventDefault();
 });
 
+let lastTouchEndAt = 0;
+document.addEventListener(
+  "touchend",
+  (event) => {
+    const now = Date.now();
+    if (now - lastTouchEndAt <= 300) {
+      event.preventDefault();
+    }
+    lastTouchEndAt = now;
+  },
+  { passive: false }
+);
+
 function createPlayer(index, previous = null) {
   return {
     id: index + 1,
