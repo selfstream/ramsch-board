@@ -19,15 +19,30 @@ window.addEventListener("contextmenu", (event) => {
   event.preventDefault();
 });
 
-let lastTouchEndAt = 0;
+let lastRapidTouchAt = 0;
 document.addEventListener(
   "touchend",
   (event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    if (!target.closest(".chalkboard, .toolbar__controls")) return;
+
     const now = Date.now();
-    if (now - lastTouchEndAt <= 300) {
+    if (now - lastRapidTouchAt <= 280) {
       event.preventDefault();
     }
-    lastTouchEndAt = now;
+    lastRapidTouchAt = now;
+  },
+  { passive: false }
+);
+
+document.addEventListener(
+  "dblclick",
+  (event) => {
+    const target = event.target;
+    if (target instanceof Element && target.closest(".chalkboard, .toolbar__controls")) {
+      event.preventDefault();
+    }
   },
   { passive: false }
 );
